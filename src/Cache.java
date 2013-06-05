@@ -27,6 +27,7 @@ public class Cache {
 	 */
 	private String mode ;
 	private int assoc;
+	private int blockSize;
 	
 	public Cache() {
 		init();
@@ -35,6 +36,7 @@ public class Cache {
 		this.hit = 0;
 		this.miss = 0;
 		this.mru = null;
+		this.blockSize = 1;
 		reset();
 	}
 	
@@ -42,7 +44,7 @@ public class Cache {
 		for (int i = 0; i < MAX_SIZE; i++) {
 			this.data[i] = -1;
 			this.tags[i] = -1;
-			this.mru = new int[Cache.MAX_SIZE / this.assoc];
+			this.mru = new int[Cache.MAX_SIZE / this.assoc / this.blockSize];
 			for (int j = 0; j < mru.length; j++) {
 				this.mru[j] = -1;
 			}
@@ -50,27 +52,71 @@ public class Cache {
 	}
 
 	private void init() {
-		this.data = new int[2048];
-		this.tags = new byte[2048];
-		this.validBits = new boolean[2048];
-		this.lruBits = new int[2048];
+		this.data = new int[Cache.MAX_SIZE];
+		this.tags = new byte[Cache.MAX_SIZE];
+		this.validBits = new boolean[Cache.MAX_SIZE];
+		this.lruBits = new int[Cache.MAX_SIZE];
 	}
 
 	public void setMode(String mode) {
 		this.mode = mode;
 		if ("0000".equals(mode)) {
 			//DM with 1 Word x Block
-			if (this.assoc != 1) {
+			if (this.assoc != 1 || this.blockSize != 1) {
 				this.assoc = 1;
+				this.blockSize = 1;
+				this.reset();
+			}
+		} else if ("0001".equals(mode)) {
+			//DM with 2 Words x Block
+			if (this.assoc != 1 || this.blockSize != 2) {
+				this.assoc = 1;
+				this.blockSize = 2;
+				this.reset();
+			}
+		} else if ("0010".equals(mode)) {
+			//DM with 4 Words x Block
+			if (this.assoc != 1 || this.blockSize != 4) {
+				this.assoc = 1;
+				this.blockSize = 4;
+				this.reset();
+			}
+		} else if ("0011".equals(mode)) {
+			//DM with 8 Words x Block
+			if (this.assoc != 1 || this.blockSize != 8) {
+				this.assoc = 1;
+				this.blockSize = 8;
 				this.reset();
 			}
 		} else if ("0100".equals(mode)) {
 			//2 Way Set Associative with 1 Word x Block
-			if (this.assoc != 2) {
+			if (this.assoc != 2 || this.blockSize != 1) {
 				this.assoc = 2;
+				this.blockSize = 1;
 				this.reset();
 			}
-		}
+		} else if ("0101".equals(mode)) {
+			//2 Way Set Associative with 2 Words x Block
+			if (this.assoc != 2 || this.blockSize != 2) {
+				this.assoc = 2;
+				this.blockSize = 2;
+				this.reset();
+			}
+		} else if ("0110".equals(mode)) {
+			//2 Way Set Associative with 4 Words x Block
+			if (this.assoc != 2 || this.blockSize != 4) {
+				this.assoc = 2;
+				this.blockSize = 4;
+				this.reset();
+			}
+		} else if ("0111".equals(mode)) {
+			//2 Way Set Associative with 8 Words x Block
+			if (this.assoc != 2 || this.blockSize != 8) {
+				this.assoc = 2;
+				this.blockSize = 8;
+				this.reset();
+			}
+		} 
 	}
 	
 	public String getMode() {
