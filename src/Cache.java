@@ -41,21 +41,27 @@ public class Cache {
 	}
 	
 	private void reset() {
+		this.mru = new int[Cache.MAX_SIZE / this.assoc / this.blockSize];
+		for (int j = 0; j < mru.length; j++) {
+			this.mru[j] = -1;
+		}
+		this.tags = new byte[Cache.MAX_SIZE / this.blockSize];
+		for (int j = 0; j < tags.length; j++) {
+			this.tags[j] = -1;
+		}
+		this.lruBits = new int[Cache.MAX_SIZE / this.blockSize];
+		for (int j = 0; j < lruBits.length; j++) {
+			this.lruBits[j] = -1;
+		}
 		for (int i = 0; i < MAX_SIZE; i++) {
 			this.data[i] = -1;
 			this.tags[i] = -1;
-			this.mru = new int[Cache.MAX_SIZE / this.assoc / this.blockSize];
-			for (int j = 0; j < mru.length; j++) {
-				this.mru[j] = -1;
-			}
 		}
 	}
 
 	private void init() {
 		this.data = new int[Cache.MAX_SIZE];
-		this.tags = new byte[Cache.MAX_SIZE];
 		this.validBits = new boolean[Cache.MAX_SIZE];
-		this.lruBits = new int[Cache.MAX_SIZE];
 	}
 
 	public void setMode(String mode) {
@@ -132,14 +138,15 @@ public class Cache {
 	}
 	
 	public int read(int address) {
-		int size = Cache.MAX_SIZE / this.assoc;
-		int pos = address % size;
-		byte tag = (byte) (address / size);
+		int sets = Cache.MAX_SIZE / this.assoc / this.blockSize;
+		int blockNo = address / this.blockSize;
+		int pos = blockNo % sets;
+		byte tag = (byte) (blockNo / sets);
 		//MRU Way Prediction
 		if (this.mru[pos] >= 0 && tag == this.tags[pos+this.mru[pos]]) {
 			this.hit++;
 			this.lruBits[pos+this.mru[pos]] = clock++;
-			return this.data[pos+this.mru[pos]]; 
+			return this.data[pos + this.blockSize * this.mru[pos] + (address % this.blockSize)]; //Check this 
 		}
 		//
 		for (int i = 0; i < this.assoc; i++) {
